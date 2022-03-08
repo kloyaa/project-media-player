@@ -70,9 +70,15 @@ class _MusicPageState extends State<MusicPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pink,
+        backgroundColor: Colors.black87,
         leading: const SizedBox(),
         leadingWidth: 0,
+        title: Text(
+          "Songs",
+          style: GoogleFonts.roboto(
+            color: Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
             splashRadius: 20.0,
@@ -81,7 +87,7 @@ class _MusicPageState extends State<MusicPage> {
               Get.toNamed("/screen-videos");
             },
             icon: const Icon(
-              Icons.videocam_sharp,
+              Icons.video_stable,
               color: Colors.white,
             ),
           )
@@ -141,7 +147,7 @@ class _MusicPageState extends State<MusicPage> {
 // This trailing comma makes auto-formatting nicer for build methods.
       bottomNavigationBar: _songTitle.isNotEmpty
           ? BottomAppBar(
-              color: Colors.pink,
+              color: Colors.black87,
               elevation: 5,
               child: Container(
                 height: Get.height * 0.10,

@@ -1,4 +1,5 @@
 import 'package:app/controllers/videoPlayerController.dart';
+import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getter/getter.dart';
@@ -12,20 +13,13 @@ class ScreenVideos extends StatefulWidget {
 }
 
 class _ScreenVideosState extends State<ScreenVideos> {
-  playVideo() {}
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
   Future<List<Media>> getVideos() async {
     return await Getter.get(type: GetterType.videos);
   }
 
-  _getImage(videoPathUrl) async {
-    //return uint8list;
+  _openVideo(videoPathUrl) async {
+    Get.put(VideoPlayerController()).videoPath = videoPathUrl;
+    Get.toNamed("/screen-video-preview");
   }
 
   @override
@@ -34,39 +28,62 @@ class _ScreenVideosState extends State<ScreenVideos> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.pink,
+        backgroundColor: Colors.black87,
+        leading: IconButton(
+          onPressed: () {
+            Get.back();
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+        title: Text(
+          "Videos",
+          style: GoogleFonts.roboto(
+            color: Colors.white,
+          ),
+        ),
       ),
-      body: FutureBuilder<List<Media>>(
-        future: getVideos(),
-        builder: (_, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                'Nothing to show',
-                style: GoogleFonts.roboto(color: Colors.black87),
-              ),
-            );
-          }
-          return ListView.builder(
-            itemBuilder: (_, index) {
-              return ListTile(
-                leading: const Icon(Icons.videocam_sharp),
-                onTap: () {
-                  Get.put(VideoPlayerController()).videoPath =
-                      snapshot.data![index].path.toString();
-                  Get.toNamed("/screen-video-preview");
-                },
-                title: Text(snapshot.data![index].title),
+      body: Column(
+        children: [
+          FutureBuilder<List<Media>>(
+            future: getVideos(),
+            builder: (_, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              if (snapshot.data!.isEmpty) {
+                return Center(
+                  child: Text(
+                    'Nothing to show',
+                    style: GoogleFonts.roboto(color: Colors.black87),
+                  ),
+                );
+              }
+              return Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemBuilder: (_, index) {
+                    return ListTile(
+                      leading: const Icon(
+                        Icons.video_stable,
+                        color: Colors.black87,
+                      ),
+                      onTap: () {
+                        _openVideo(snapshot.data![index].path.toString());
+                      },
+                      title: Text(snapshot.data![index].title),
+                    );
+                  },
+                  itemCount: snapshot.data!.length,
+                ),
               );
             },
-            itemCount: snapshot.data!.length,
-          );
-        },
+          ),
+        ],
       ),
     );
   }

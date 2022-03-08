@@ -18,7 +18,7 @@ class _PreviewVideoState extends State<PreviewVideo> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.pink,
+        backgroundColor: Colors.black87,
         actions: [],
       ),
       body: Container(
@@ -28,6 +28,7 @@ class _PreviewVideoState extends State<PreviewVideo> {
             Get.put(VideoPlayerController()).videoPath,
             betterPlayerConfiguration: const BetterPlayerConfiguration(
               fit: BoxFit.contain,
+              fullScreenByDefault: true,
               controlsConfiguration: BetterPlayerControlsConfiguration(
                 enableSkips: false,
                 showControls: true,
