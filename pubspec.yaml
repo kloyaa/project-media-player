@@ -34,7 +34,7 @@ dependencies:
 
   getter: ^0.0.3
 
-
+  flutter_vector_icons: ^1.0.0
   google_fonts: ^2.3.1
   get: ^4.6.1
   audioplayers: ^0.20.1

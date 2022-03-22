@@ -1,4 +1,8 @@
+import 'package:app/colors.dart';
+import 'package:app/helpers/destrpy_textfield_focus.dart';
+import 'package:app/widgets/forms.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -12,19 +16,46 @@ class MusicPage extends StatefulWidget {
   State<MusicPage> createState() => _MusicPageState();
 }
 
-class _MusicPageState extends State<MusicPage> {
+class _MusicPageState extends State<MusicPage> with WidgetsBindingObserver {
+  late AppLifecycleState _appLifecycleState;
+
   final AudioPlayer _audioPlayer = AudioPlayer();
   final OnAudioQuery _audioQuery = OnAudioQuery();
+  final _searchKey = TextEditingController();
 
   String _prevPath = ""; // Save before clearing
   String _currentPath = "";
   String _songTitle = "";
+  int _songLength = 0;
+  late Future<List<SongModel>> _listFuture;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _listFuture = getSongs();
     requestPermission();
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      _appLifecycleState = state;
+    });
+    if (state == AppLifecycleState.paused) {
+      print('AppLifecycleState state: Paused audio playback');
+    }
+    if (state == AppLifecycleState.resumed) {
+      _listFuture = getSongs();
+      print('AppLifecycleState state: Resumed audio playback');
+    }
+    print('AppLifecycleState state:  $state');
   }
 
   void requestPermission() {
@@ -66,140 +97,213 @@ class _MusicPageState extends State<MusicPage> {
     _audioPlayer.resume();
   }
 
+  void refresh() {
+    setState(() {
+      _listFuture = getSongs();
+    });
+  }
+
+  Future<List<SongModel>> getSongs() async {
+    var songs = await _audioQuery.querySongs(
+      sortType: null,
+      orderType: OrderType.ASC_OR_SMALLER,
+      uriType: UriType.EXTERNAL,
+      ignoreCase: true,
+    );
+    setState(() {
+      _songLength = songs
+          .where((element) =>
+              !element.data.contains("/storage/emulated/0/Music/ringtone"))
+          .length;
+    });
+    return songs;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black87,
-        leading: const SizedBox(),
-        leadingWidth: 0,
-        title: Text(
-          "Songs",
-          style: GoogleFonts.roboto(
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            splashRadius: 20.0,
-            onPressed: () {
-              stop();
-              Get.toNamed("/screen-videos");
-            },
-            icon: const Icon(
-              Icons.video_stable,
-              color: Colors.white,
+    return GestureDetector(
+      onTap: () => destroyTextFieldFocus(context),
+      child: WillPopScope(
+        onWillPop: () async => false,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            leading: const SizedBox(),
+            leadingWidth: 0,
+            title: Text(
+              "Songs ($_songLength)",
+              style: GoogleFonts.roboto(
+                color: Colors.black87,
+                fontSize: 16.0,
+              ),
             ),
-          )
-        ],
-      ),
-      body: FutureBuilder<List<SongModel>>(
-        future: _audioQuery.querySongs(
-          sortType: null,
-          orderType: OrderType.ASC_OR_SMALLER,
-          uriType: UriType.EXTERNAL,
-          ignoreCase: true,
-        ),
-        builder: (_, snapshot) {
-          if (snapshot.data == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("No songs found"),
-            );
-          }
-          // ignore: unrelated_type_equality_checks
-          if (snapshot.connectionState == ConnectionState.done &&
-              !snapshot.hasData) {
-            setState(() {
-              _songTitle = snapshot.data![0].displayNameWOExt;
-            });
-          }
-
-          return ListView.builder(
-            itemBuilder: (_, index) {
-              if (snapshot.data![index].data
-                  .contains("/storage/emulated/0/Music/ringtone")) {
-                return const SizedBox();
-              }
-
-              return ListTile(
-                title: Text(snapshot.data![index].displayNameWOExt.trim()),
-                subtitle:
-                    Text("Artist ${snapshot.data![index].artist.toString()}"),
-                onTap: _currentPath == snapshot.data![index].data
-                    ? () {
-                        pause();
-                      }
-                    : () {
-                        play(
-                          path: snapshot.data![index].data,
-                          title: snapshot.data![index].displayNameWOExt,
-                        );
-                      },
-              );
-            },
-            itemCount: snapshot.data!.length,
-          );
-        },
-      ),
-// This trailing comma makes auto-formatting nicer for build methods.
-      bottomNavigationBar: _songTitle.isNotEmpty
-          ? BottomAppBar(
-              color: Colors.black87,
-              elevation: 5,
+            actions: [
+              IconButton(
+                splashRadius: 20.0,
+                onPressed: () {
+                  stop();
+                  Get.toNamed("/screen-videos");
+                },
+                icon: const Icon(
+                  Entypo.folder_video,
+                  color: Colors.black87,
+                ),
+              )
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(80.0),
               child: Container(
-                height: Get.height * 0.10,
-                padding: const EdgeInsets.all(20.0),
+                margin: const EdgeInsets.only(
+                  left: 16.0,
+                  right: 16.0,
+                  bottom: 10.0,
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                      width: Get.width * 0.70,
-                      child: Text(
-                        _songTitle,
-                        style: GoogleFonts.roboto(
-                          color: Colors.white,
-                          fontSize: 14.0,
-                          height: 1,
+                    Expanded(
+                      child: inputTextFieldSearch(
+                        controller: _searchKey,
+                        labelText: "Search title",
+                        hintStyleStyle: GoogleFonts.manrope(fontSize: 12.0),
+                        textFieldStyle: GoogleFonts.manrope(fontSize: 12.0),
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        prefixIcon: IconButton(
+                          splashRadius: 20,
+                          onPressed: () {
+                            _searchKey.text = "";
+                            refresh();
+                          },
+                          icon: const Icon(
+                            AntDesign.close,
+                            color: Colors.black87,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.fade,
+                        onChanged: () => refresh(),
                       ),
                     ),
-                    _currentPath.isNotEmpty
-                        ? IconButton(
-                            padding: const EdgeInsets.all(0),
-                            onPressed: () async {
-                              pause();
-                            },
-                            icon: const Icon(
-                              Icons.pause,
-                              size: 24.0,
-                              color: Colors.white,
-                            ),
-                          )
-                        : IconButton(
-                            padding: const EdgeInsets.all(0),
-                            onPressed: () async {
-                              play(
-                                path: _prevPath,
-                                title: _songTitle,
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.play_arrow,
-                              size: 24.0,
-                              color: Colors.white,
-                            ),
-                          ),
                   ],
                 ),
               ),
-            )
-          : const SizedBox(),
+            ),
+          ),
+          body: FutureBuilder<List<SongModel>>(
+            future: _listFuture,
+            builder: (_, snapshot) {
+              if (snapshot.connectionState == ConnectionState.none) {
+                print("ConnectionState.none");
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.data == null) {
+                print("snapshot.data == null");
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async => getSongs(),
+                child: Scrollbar(
+                  child: ListView.builder(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    itemBuilder: (context, index) {
+                      if (snapshot.data![index].data
+                          .contains("/storage/emulated/0/Music/ringtone")) {
+                        return const SizedBox();
+                      }
+                      if (!snapshot.data![index].displayNameWOExt
+                          .toLowerCase()
+                          .contains(_searchKey.text.trim())) {
+                        return const SizedBox();
+                      }
+                      return Container(
+                        margin: EdgeInsets.only(top: index == 0 ? 40.0 : 10.0),
+                        child: ListTile(
+                          minLeadingWidth: 30,
+                          leading: const Icon(
+                            MaterialIcons.music_note,
+                            color: Colors.black87,
+                          ),
+                          title: Text(
+                              snapshot.data![index].displayNameWOExt.trim()),
+                          onTap: _currentPath == snapshot.data![index].data
+                              ? () => pause()
+                              : () {
+                                  destroyTextFieldFocus(context);
+
+                                  play(
+                                    path: snapshot.data![index].data,
+                                    title:
+                                        snapshot.data![index].displayNameWOExt,
+                                  );
+                                },
+                        ),
+                      );
+                    },
+                    itemCount: snapshot.data!.length,
+                  ),
+                ),
+              );
+            },
+          ),
+          // This trailing comma makes auto-formatting nicer for build methods.
+          bottomNavigationBar: _songTitle.isNotEmpty
+              ? BottomAppBar(
+                  color: Colors.white,
+                  elevation: 10,
+                  child: Container(
+                    height: Get.height * 0.10,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: Get.width * 0.70,
+                          child: Text(
+                            _songTitle,
+                            style: GoogleFonts.roboto(
+                              color: Colors.black87,
+                              fontSize: 13.0,
+                              height: 1,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        _currentPath.isNotEmpty
+                            ? IconButton(
+                                padding: const EdgeInsets.all(0),
+                                onPressed: () async {
+                                  pause();
+                                },
+                                icon: const Icon(
+                                  AntDesign.pausecircle,
+                                  size: 24.0,
+                                  color: Colors.black87,
+                                ),
+                              )
+                            : IconButton(
+                                padding: const EdgeInsets.all(0),
+                                onPressed: () async {
+                                  play(
+                                    path: _prevPath,
+                                    title: _songTitle,
+                                  );
+                                },
+                                icon: const Icon(
+                                  AntDesign.play,
+                                  size: 24.0,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                )
+              : const SizedBox(),
+        ),
+      ),
     );
   }
 }
