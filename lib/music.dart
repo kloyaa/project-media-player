@@ -17,7 +17,7 @@ class MusicPage extends StatefulWidget {
 }
 
 class _MusicPageState extends State<MusicPage> with WidgetsBindingObserver {
-  //late AppLifecycleState _appLifecycleState;
+  late AppLifecycleState _appLifecycleState;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   final OnAudioQuery _audioQuery = OnAudioQuery();
@@ -44,19 +44,19 @@ class _MusicPageState extends State<MusicPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   setState(() {
-  //     _appLifecycleState = state;
-  //   });
-  //   if (state == AppLifecycleState.paused) {
-  //     print('AppLifecycleState state: Paused audio playback');
-  //   }
-  //   if (state == AppLifecycleState.resumed) {
-  //     _songs = getSongs();
-  //     print('AppLifecycleState state: Resumed audio playback');
-  //   }
-  //   print('AppLifecycleState state:  $state');
-  // }
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      _appLifecycleState = state;
+    });
+    if (state == AppLifecycleState.paused) {
+      print('AppLifecycleState state: Paused audio playback');
+    }
+    if (state == AppLifecycleState.resumed) {
+      _songs = getSongs();
+      print('AppLifecycleState state: Resumed audio playback');
+    }
+    print('AppLifecycleState state:  $state');
+  }
 
   void requestPermission() {
     Permission.storage.request();
