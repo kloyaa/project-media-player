@@ -14,13 +14,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
+      title: 'Marju Music',
       theme: ThemeData(
         primarySwatch: Colors.grey,
-      ),
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Container(),
       ),
       initialRoute: "/screen-musics",
       getPages: [
@@ -28,7 +24,10 @@ class MyApp extends StatelessWidget {
           name: "/screen-musics",
           page: () => const MusicPage(),
         ),
-        GetPage(name: "/screen-videos", page: () => const ScreenVideos()),
+        GetPage(
+          name: "/screen-videos",
+          page: () => const VideoPage(),
+        ),
         GetPage(
           name: "/screen-video-preview",
           page: () => const PreviewVideo(),

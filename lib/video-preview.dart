@@ -16,23 +16,16 @@ class _PreviewVideoState extends State<PreviewVideo> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.black87,
-        actions: [],
-      ),
-      body: Container(
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: BetterPlayer.file(
-            Get.put(VideoPlayerController()).videoPath,
-            betterPlayerConfiguration: const BetterPlayerConfiguration(
-              fit: BoxFit.contain,
-              fullScreenByDefault: true,
-              controlsConfiguration: BetterPlayerControlsConfiguration(
-                enableSkips: false,
-                showControls: true,
-              ),
+      body: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: BetterPlayer.file(
+          Get.put(VideoPlayerController()).videoPath,
+          betterPlayerConfiguration: const BetterPlayerConfiguration(
+            fit: BoxFit.contain,
+            fullScreenByDefault: true,
+            controlsConfiguration: BetterPlayerControlsConfiguration(
+              enableSkips: false,
+              showControls: true,
             ),
           ),
         ),
